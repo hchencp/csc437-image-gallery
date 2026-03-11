@@ -1,0 +1,51 @@
+### API 0: Get all images
+# Used to verify the server is up and to find real IDs for testing.
+GET http://localhost:3000/api/images
+
+---
+
+### API 1: Get one image by ID (Success)
+# REPLACE the ID below with a real _id from your MongoDB
+GET http://localhost:3000/api/images/69afbbceeed140c3db712b0c
+
+### API 1: Get one image by ID (404 Not Found)
+# Using a valid ObjectId format that doesn't exist in your DB.
+GET http://localhost:3000/api/images/000000000000000000000000
+
+---
+
+### API 2: Rename image (Success - 204 No Content)
+# REPLACE the ID below with a real _id from your MongoDB
+PATCH http://localhost:3000/api/images/69afbbceeed140c3db712b0c
+Content-Type: application/json
+
+{
+    "newName": "Majestic Husky"
+}
+
+### API 2: Rename image (404 Not Found)
+# Triggered when the ID is valid but doesn't match any document.
+PATCH http://localhost:3000/api/images/111111111111111111111111
+Content-Type: application/json
+
+{
+    "newName": "Ghost Cat"
+}
+
+### API 2: Rename image (400 Bad Request)
+# Triggered because "newName" is missing from the JSON body.
+PATCH http://localhost:3000/api/images/69afbbceeed140c3db712b0c
+Content-Type: application/json
+
+{
+    "wrongKey": "This will fail"
+}
+
+### API 2: Rename image (413 Content Too Large)
+# Triggered when the name exceeds the 100-character limit.
+PATCH http://localhost:3000/api/images/69afbbceeed140c3db712b0c
+Content-Type: application/json
+
+{
+    "newName": "This is an extremely long name that is designed specifically to exceed the one hundred character limit imposed by the Lab 22a requirements to ensure the server correctly returns a 413 error code."
+}

@@ -3,9 +3,10 @@ import "./Images.css";
 
 export function ImageGrid(props) {
   const imageElements = props.images.map((image) => (
-    <div key={image.id} className="ImageGrid-photo-container">
-      {/* Replaced <a> with <Link> and href with to */}
-      <Link to={"/images/" + image.id}>
+    // 1. Change key to use underscore: _id
+    <div key={image._id} className="ImageGrid-photo-container">
+      {/* 2. Change the Link to use underscore: _id */}
+      <Link to={"/images/" + image._id}>
         <img src={image.src} alt={image.name} />
       </Link>
     </div>

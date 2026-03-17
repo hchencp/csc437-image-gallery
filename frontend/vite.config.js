@@ -4,11 +4,12 @@ import react from "@vitejs/plugin-react-swc";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Add the server block here:
   server: {
     proxy: {
-      // Forward all requests from localhost:5173/api/* to localhost:3000/api/*
+      // Forward API calls
       "/api": "http://localhost:3000",
+      // Forward image file requests (Requirement for Lab 24)
+      "/uploads": "http://localhost:3000",
     },
   },
 });

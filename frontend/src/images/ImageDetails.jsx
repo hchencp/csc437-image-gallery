@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router";
-import { ImageNameEditor } from "./ImageNameEditor"; // Adjust path if necessary
+import { ImageNameEditor } from "./ImageNameEditor";
 
-export function ImageDetails() {
+// 1. Accept authToken as a prop
+export function ImageDetails({ authToken }) {
   const { id } = useParams();
 
   const [image, setImage] = useState(null);
@@ -12,11 +13,14 @@ export function ImageDetails() {
   useEffect(() => {
     async function doFetch() {
       try {
-        // API 1: Fetch ONLY the specific image by its ID
-        const response = await fetch(`/api/images/${id}`);
+        // 2. Add Authorization header to the GET request
+        const response = await fetch(`/api/images/${id}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
 
         if (!response.ok) {
-          // If the ID is invalid or missing, this will catch the 404
           throw new Error(`Error: HTTP ${response.status}`);
         }
 
@@ -28,36 +32,34 @@ export function ImageDetails() {
         setIsLoading(false);
       }
     }
-    doFetch();
-  }, [id]);
 
-  // Callback to update the heading immediately after a successful rename
+    if (authToken) {
+      doFetch();
+    }
+  }, [id, authToken]); // Re-run if ID or Token changes
+
   const handleNameUpdate = (newName) => {
-    // Requirement: Do not mutate state directly. Create a shallow copy.
     setImage({ ...image, name: newName });
   };
 
   if (isLoading) return <h2>Loading...</h2>;
   if (error) return <h2 style={{ color: "red" }}>{error}</h2>;
 
-  if (!image) {
-    return <h2>Image not found</h2>;
-  }
+  if (!image) return <h2>Image not found</h2>;
 
   return (
     <>
-      {/* This heading will update automatically thanks to handleNameUpdate */}
       <h2>{image.name}</h2>
-
       <p>
         Uploaded by: {image.author.username} ({image.author.email})
       </p>
 
-      {/* Lab 22b: Add the editor component here */}
+      {/* 3. Pass the authToken down to the editor so it can authorize the RENAME (PATCH) */}
       <ImageNameEditor
         imageId={image._id}
         initialValue={image.name}
         onNameUpdated={handleNameUpdate}
+        authToken={authToken}
       />
 
       <p>Database ID: {image._id}</p>

@@ -1,6 +1,12 @@
 import { useState } from "react";
 
-export function ImageNameEditor({ imageId, initialValue, onNameUpdated }) {
+// 1. Accept authToken as a prop
+export function ImageNameEditor({
+  imageId,
+  initialValue,
+  onNameUpdated,
+  authToken,
+}) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(initialValue || "");
   const [isLoading, setIsLoading] = useState(false);
@@ -9,7 +15,7 @@ export function ImageNameEditor({ imageId, initialValue, onNameUpdated }) {
   function handleEditPressed() {
     setIsEditingName(true);
     setNameInput(initialValue || "");
-    setError(""); // Clear previous errors
+    setError("");
   }
 
   async function handleSubmitPressed() {
@@ -19,18 +25,20 @@ export function ImageNameEditor({ imageId, initialValue, onNameUpdated }) {
     try {
       const response = await fetch(`/api/images/${imageId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // 2. Add the Authorization header here
+          Authorization: `Bearer ${authToken}`,
+        },
         body: JSON.stringify({ newName: nameInput }),
       });
 
       if (!response.ok) {
-        // Try to get the error message from your backend 400/413/404 logic
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to rename");
       }
 
-      // Success! (204 No Content has no body to parse)
-      onNameUpdated(nameInput); // Tell the parent to update the <h2>
+      onNameUpdated(nameInput);
       setIsEditingName(false);
     } catch (err) {
       setError(err.message);

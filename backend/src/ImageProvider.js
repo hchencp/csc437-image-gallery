@@ -3,7 +3,9 @@ import { ObjectId } from "mongodb";
 export class ImageProvider {
   constructor(mongoClient) {
     this.client = mongoClient;
-    this.collection = mongoClient.db("image-gallery").collection("images");
+    // Note: Using the db name from your .env for consistency
+    this.db = mongoClient.db("image-gallery");
+    this.collection = this.db.collection("images");
   }
 
   async getAllImages() {
@@ -21,9 +23,7 @@ export class ImageProvider {
     return await this.collection.aggregate(pipeline).toArray();
   }
 
-  // API 1: Get one image by ID
   async getOneImage(imageId) {
-    // 1. Check if the string is a valid MongoDB ObjectId first
     if (!ObjectId.isValid(imageId)) return null;
 
     const pipeline = [
@@ -43,16 +43,40 @@ export class ImageProvider {
     return results[0] || null;
   }
 
-  // API 2: Update image name
   async updateImageName(imageId, newName) {
-    if (!ObjectId.isValid(imageId)) return { matchedCount: 0 };
+    if (!ObjectId.isValid(imageId)) return 0;
 
     const result = await this.collection.updateOne(
       { _id: new ObjectId(imageId) },
       { $set: { name: newName } },
     );
 
-    // Lab 22a asks you to return the matchedCount
     return result.matchedCount;
+  }
+
+  /**
+   * Lab 24: Create a new image document in the database
+   */
+  async createImage(name, filename, username) {
+    // 1. Find the user in the 'users' collection to get their _id
+    // This ensures the $lookup in getAllImages/getOneImage actually works!
+    const user = await this.db
+      .collection("users")
+      .findOne({ username: username });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const newImage = {
+      name: name,
+      src: `/uploads/${filename}`,
+      author: user._id, // Store the ObjectId, not the username string
+    };
+
+    const result = await this.collection.insertOne(newImage);
+
+    // Return the string version of the new ID so the frontend can redirect
+    return result.insertedId.toString();
   }
 }
